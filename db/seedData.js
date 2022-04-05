@@ -10,9 +10,43 @@ async function dropTables() {
 
 async function createTables() {
   console.log("Starting to build tables...");
-  // create all tables, in the correct order
+  await client.query(`
+  CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username varchar(255) UNIQUE NOT NULL,
+    password varchar(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    active BOOLEAN DEFAULT true
+  )
+
+  CREATE TABLE activity (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    duration INT NOT NULL,
+    count INT NOT NULL,
+    routineActivityId INT,
+    routineId
+  )
+
+
+  CREATE TABLE routine(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL);
+    
+    CREATE TABLE routine_activity(
+    "activityId" INTEGER REFERENCES activity(id),
+    "routineId" INTEGER REFERENCES routine(id), 
+     UNIQUE ("postId", "tagId") 
+    );
+`)
 
 }
+
+
+
+
+
 
 /* 
 
