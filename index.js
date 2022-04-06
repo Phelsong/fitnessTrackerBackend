@@ -1,10 +1,13 @@
 // create the express server here
 const express = require('express');
+const cors = require('cors')
 const server = express();
 const apiRouter = require("./api");
 const morgan = require('morgan');
 require('dotenv').config()
 const {PORT = 3000}=process.env;
+
+server.use(cors())
 
 server.use(morgan("dev"));
 
@@ -31,6 +34,9 @@ server.get('/health', (req, res, next) => {
   `);
 });
 
+server.get('/health/:id', function (req, res, next) {
+  res.json({msg: 'All is Well'})
+})
 
 
 server.listen(PORT, () => {
