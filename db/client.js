@@ -26,10 +26,9 @@ async function getAllUsers(){
 //----------------------------------------------------------------
 async function getAllActivities(){
   const { rows } = await client.query(
-    `SELECT name
+    `SELECT name, id
     FROM activities;
   `);
-
   return rows;
 }
 
@@ -41,6 +40,21 @@ async function getAllRoutines(){
   `);
 
   return rows;
+}
+//----------------------------------------------------------------
+async function getRoutinesWithoutActivities(){
+  try {
+  const { rows } = await client.query(`
+  SELECT * FROM routines
+  LEFT JOIN routine_activities ON routines.id = routine_activities."routineId"
+  WHERE "routineId" is NULL;
+  `)
+  return rows
+} catch (e) {
+  console.error(e, "error getting routines without activities")
+  throw e
+}
+
 }
 //----------------------------------------------------------------
 //CREATE functions start:
@@ -65,15 +79,14 @@ async function createUser({ username, password }) {
 async function createActivity({name, description}) {
   
   try {
-    const { rows } = await client.query(
-      `
-      INSERT INTO activities ( name,
-        description) 
+    const { rows : activities } = await client.query(`
+      INSERT INTO activities ( name, description )
       VALUES($1, $2) 
       RETURNING *;  
-    `,
-      [name, description]
-    );
+    `, [name, description] );
+
+     return activities
+
   } catch (error) {
     console.error("error creating activity")
     throw error;
@@ -97,35 +110,23 @@ async function createRoutine({creatorId, isPublic, name, goal}) {
     `,
       [creatorId, isPublic, name, goal]
     );
+    return routine
   } catch (error) {
     console.error("error creating routine")
     throw error;
   }
 }
 //-----------------------------------------------------------------
-async function createRoutineActivities(routineList) {
-  if(routineList.length === 0){return}
-
-  const routineNames = routineList.map(
-    (_, index) => `$${index + 1}`).join('), (');
-
-    const selectRoutineList = routineList.map(
-      (_, index) => `$${index + 1}`).join(', ');
+async function addActivityToRoutine({routineId, activityId, count, duration}) {
 
   try {
-     await client.query(`
-      INSERT INTO routine_activities (name)
-      VALUES(${routineNames}) 
-      ON CONFLICT (name) DO NOTHING;
-    `, routineList
+    const { rows : routineActivities} =await client.query(`
+      INSERT INTO routine_activities ("routineId", "activityId", count, duration)
+      VALUES($1, $2, $3, $4)
+      RETURNING *; 
+    `, [routineId, activityId, count, duration]
     );
-    const { rows : routineActivitiesList} = await client.query(`
-    SELECT * FROM routine_activities
-    WHERE name
-    IN (${selectRoutineList})
-  `, routineList
-    )
-    return routineActivitiesList
+    return routineActivities
 
   } catch (error) {
     console.error("error creating routine_activities: " + error)
@@ -199,4 +200,4 @@ async function getActivitiesbyRoutine(tagName) {
 
 
 //----------------------------------------------------------------
-module.exports = {client, getAllUsers, getAllActivities, getAllRoutines, createUser, createActivity, createRoutine, createRoutineActivities, getActivitiesById, getActivitiesbyRoutine};
+module.exports = {client, getAllUsers, getAllActivities, getAllRoutines, createUser, createActivity, createRoutine, addActivityToRoutine, getActivitiesById, getActivitiesbyRoutine, getRoutinesWithoutActivities}
