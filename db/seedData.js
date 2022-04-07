@@ -1,54 +1,66 @@
 // require in the database adapter functions as you write them (createUser, createActivity...)
 // const { } = require('./');
-const client = require('./client');
+const {
+  client
+} = require('./client');
 
 async function dropTables() {
   console.log('Dropping All Tables...');
   // drop all tables, in the correct order
-  await client.query(`
-  DROP TABLE IF EXISTS activity_routines
-  DROP TABLE IF EXISTS routines
-  DROP TABLE IF EXISTS activity
-  DROP TABLE IF EXISTS users
+  try {
+    await client.query(`
+  DROP TABLE IF EXISTS routine_activities;
+  DROP TABLE IF EXISTS routines;
+  DROP TABLE IF EXISTS activities;
+  DROP TABLE IF EXISTS users;
   `)
+  } catch (error) {
+    console.error("Error dropping tables!");
+    throw error;
+  }
 
 
 }
 
 async function createTables() {
-  console.log("Starting to build tables...");
-  await client.query(`
+
+  try {
+    console.log("Starting to build tables...");
+    await client.query(`
   CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    username varchar(255) UNIQUE NOT NULL,
-    password varchar(255) NOT NULL,
-    name VARCHAR(255) NOT NULL,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    name TEXT NOT NULL,
     active BOOLEAN DEFAULT true
-  )
+  );
 
   CREATE TABLE activities (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description VARCHAR(255) NOT NULL
-  )
-
+    name TEXT NOT NULL,
+    description TEXT NOT NULL
+  );
 
   CREATE TABLE routines(
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL
-    goal VARCHAR(255) UNIQUE NOT NULL
+    name TEXT UNIQUE NOT NULL,
+    goal TEXT UNIQUE NOT NULL,
     isPublic BOOLEAN NOT NULL
     );
     
-    CREATE TABLE routine_activities (
+  CREATE TABLE routine_activities(
     "activityId" INTEGER REFERENCES activities(id),
     "routineId" INTEGER REFERENCES routines(id), 
-    duration INT NOT NULL,
-    count INT NOT NULL,
-     UNIQUE ("postId", "tagId") 
+    duration INTEGER NOT NULL,
+    count INTEGER NOT NULL,
+    UNIQUE ("activityId", "routineId") 
       );
-  `)
-
+  `);
+  } catch (error) {
+    console.error("Error building tables!");
+    throw error;
+  }
+  console.log("Tables created")
 }
 
 
@@ -66,10 +78,18 @@ async function createInitialUsers() {
   console.log('Starting to create users...');
   try {
 
-    const usersToCreate = [
-      { username: 'albert', password: 'bertie99' },
-      { username: 'sandra', password: 'sandra123' },
-      { username: 'glamgal', password: 'glamgal123' },
+    const usersToCreate = [{
+        username: 'albert',
+        password: 'bertie99'
+      },
+      {
+        username: 'sandra',
+        password: 'sandra123'
+      },
+      {
+        username: 'glamgal',
+        password: 'glamgal123'
+      },
     ]
     const users = await Promise.all(usersToCreate.map(createUser));
 
@@ -85,14 +105,34 @@ async function createInitialActivities() {
   try {
     console.log('Starting to create activities...');
 
-    const activitiesToCreate = [
-      { name: 'wide-grip standing barbell curl', description: 'Lift that barbell!' },
-      { name: 'Incline Dumbbell Hammer Curl', description: 'Lie down face up on an incline bench and lift thee barbells slowly upward toward chest' },
-      { name: 'bench press', description: 'Lift a safe amount, but push yourself!' },
-      { name: 'Push Ups', description: 'Pretty sure you know what to do!' },
-      { name: 'squats', description: 'Heavy lifting.' },
-      { name: 'treadmill', description: 'running' },
-      { name: 'stairs', description: 'climb those stairs' },
+    const activitiesToCreate = [{
+        name: 'wide-grip standing barbell curl',
+        description: 'Lift that barbell!'
+      },
+      {
+        name: 'Incline Dumbbell Hammer Curl',
+        description: 'Lie down face up on an incline bench and lift thee barbells slowly upward toward chest'
+      },
+      {
+        name: 'bench press',
+        description: 'Lift a safe amount, but push yourself!'
+      },
+      {
+        name: 'Push Ups',
+        description: 'Pretty sure you know what to do!'
+      },
+      {
+        name: 'squats',
+        description: 'Heavy lifting.'
+      },
+      {
+        name: 'treadmill',
+        description: 'running'
+      },
+      {
+        name: 'stairs',
+        description: 'climb those stairs'
+      },
     ]
     const activities = await Promise.all(activitiesToCreate.map(createActivity));
 
@@ -111,11 +151,30 @@ async function createInitialRoutines() {
   try {
     console.log('starting to create routines...');
 
-    const routinesToCreate = [
-      {creatorId: 2, isPublic: false, name: 'Bicep Day', goal: 'Work the Back and Biceps.'},
-      {creatorId: 1, isPublic: true, name: 'Chest Day', goal: 'To beef up the Chest and Triceps!'},
-      {creatorId: 1, isPublic: false, name: 'Leg Day', goal: 'Running, stairs, squats'},
-      {creatorId: 2, isPublic: true, name: 'Cardio Day', goal: 'Running, stairs. Stuff that gets your heart pumping!'},
+    const routinesToCreate = [{
+        creatorId: 2,
+        isPublic: false,
+        name: 'Bicep Day',
+        goal: 'Work the Back and Biceps.'
+      },
+      {
+        creatorId: 1,
+        isPublic: true,
+        name: 'Chest Day',
+        goal: 'To beef up the Chest and Triceps!'
+      },
+      {
+        creatorId: 1,
+        isPublic: false,
+        name: 'Leg Day',
+        goal: 'Running, stairs, squats'
+      },
+      {
+        creatorId: 2,
+        isPublic: true,
+        name: 'Cardio Day',
+        goal: 'Running, stairs. Stuff that gets your heart pumping!'
+      },
     ]
     const routines = await Promise.all(routinesToCreate.map(routine => createRoutine(routine)));
     console.log('Routines Created: ', routines)
@@ -131,60 +190,59 @@ async function createInitialRoutineActivities() {
     const [bicepRoutine, chestRoutine, legRoutine, cardioRoutine] = await getRoutinesWithoutActivities();
     const [bicep1, bicep2, chest1, chest2, leg1, leg2, leg3] = await getAllActivities();
 
-    const routineActivitiesToCreate = [
-      {
+    const routineActivitiesToCreate = [{
         routineId: bicepRoutine.id,
         activityId: bicep1.id,
         count: 10,
-        duration: 5 
+        duration: 5
       },
       {
         routineId: bicepRoutine.id,
         activityId: bicep2.id,
         count: 10,
-        duration: 8 
+        duration: 8
       },
       {
         routineId: chestRoutine.id,
         activityId: chest1.id,
         count: 10,
-        duration: 8 
+        duration: 8
       },
       {
         routineId: chestRoutine.id,
         activityId: chest2.id,
         count: 10,
-        duration: 7 
+        duration: 7
       },
       {
         routineId: legRoutine.id,
         activityId: leg1.id,
         count: 10,
-        duration: 9 
+        duration: 9
       },
       {
         routineId: legRoutine.id,
         activityId: leg2.id,
         count: 10,
-        duration: 10 
+        duration: 10
       },
       {
         routineId: legRoutine.id,
         activityId: leg3.id,
         count: 10,
-        duration: 7 
+        duration: 7
       },
       {
         routineId: cardioRoutine.id,
         activityId: leg2.id,
         count: 10,
-        duration: 10 
+        duration: 10
       },
       {
         routineId: cardioRoutine.id,
         activityId: leg3.id,
         count: 10,
-        duration: 15 
+        duration: 15
       },
     ]
     const routineActivities = await Promise.all(routineActivitiesToCreate.map(addActivityToRoutine));
