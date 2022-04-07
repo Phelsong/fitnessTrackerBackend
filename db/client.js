@@ -12,8 +12,9 @@ ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : und
 
 
  
-
-  async function getAllUsers(){
+//----------------------------------------------------------------
+// GETALL functions start:
+async function getAllUsers(){
     const { rows } = await client.query(
       `SELECT id, username, name
       FROM users;
@@ -42,16 +43,17 @@ async function getAllRoutines(){
   return rows;
 }
 //----------------------------------------------------------------
-async function createUser({ username, password, name }) {
+//CREATE functions start:
+async function createUser({ username, password }) {
   try {
     const { rows } = await client.query(
       `
-      INSERT INTO users(username, password, name) 
-      VALUES($1, $2, $3, $4) 
+      INSERT INTO users(username, password) 
+      VALUES($1, $2) 
       ON CONFLICT (username) DO NOTHING 
       RETURNING *;
     `,
-      [username, password, name]
+      [username, password]
     );
 
     return rows;
@@ -60,6 +62,78 @@ async function createUser({ username, password, name }) {
   }
 }
 //----------------------------------------------------------------
+async function createActivity({name, description}) {
+  
+  try {
+    const { rows } = await client.query(
+      `
+      INSERT INTO activities ( name,
+        description) 
+      VALUES($1, $2) 
+      RETURNING *;  
+    `,
+      [name, description]
+    );
+  } catch (error) {
+    console.error("error creating activity")
+    throw error;
+  }
+}
+//----------------------------------------------------------------
+async function createRoutine({creatorId, isPublic, name, goal}) {
+  
+// creatorId: 1,
+// isPublic: true,
+// name: 'Chest Day',
+// goal: 'To beef up the Chest and Triceps!'
+
+  try {
+    const { rows : [routine] } = await client.query(
+      `
+      INSERT INTO routines ("creatorId", "isPublic", name,
+        goal) 
+      VALUES($1, $2, $3, $4) 
+      RETURNING *;  
+    `,
+      [creatorId, isPublic, name, goal]
+    );
+  } catch (error) {
+    console.error("error creating routine")
+    throw error;
+  }
+}
+//-----------------------------------------------------------------
+async function createRoutineActivities(routineList) {
+  if(routineList.length === 0){return}
+
+  const routineNames = routineList.map(
+    (_, index) => `$${index + 1}`).join('), (');
+
+    const selectRoutineList = routineList.map(
+      (_, index) => `$${index + 1}`).join(', ');
+
+  try {
+     await client.query(`
+      INSERT INTO routine_activities (name)
+      VALUES(${routineNames}) 
+      ON CONFLICT (name) DO NOTHING;
+    `, routineList
+    );
+    const { rows : routineActivitiesList} = await client.query(`
+    SELECT * FROM routine_activities
+    WHERE name
+    IN (${selectRoutineList})
+  `, routineList
+    )
+    return routineActivitiesList
+
+  } catch (error) {
+    console.error("error creating routine_activities: " + error)
+    throw error;
+  }
+}
+//----------------------------------------------------------------
+
 
 
 
@@ -104,8 +178,6 @@ async function getActivitiesById(activitiesId) {
     throw error;
   }
 }
-
-
 //----------------------------------------------------------------
 async function getActivitiesbyRoutine(tagName) {
   try {
@@ -127,4 +199,4 @@ async function getActivitiesbyRoutine(tagName) {
 
 
 //----------------------------------------------------------------
-module.exports = {client, getAllUsers, getAllActivities, getAllRoutines, createUser, getActivitiesById, getActivitiesbyRoutine};
+module.exports = {client, getAllUsers, getAllActivities, getAllRoutines, createUser, createActivity, createRoutine, createRoutineActivities, getActivitiesById, getActivitiesbyRoutine};
