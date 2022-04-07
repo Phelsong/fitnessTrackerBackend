@@ -5,6 +5,13 @@ const client = require('./client');
 async function dropTables() {
   console.log('Dropping All Tables...');
   // drop all tables, in the correct order
+  await client.query(`
+  DROP TABLE IF EXISTS activity_routines
+  DROP TABLE IF EXISTS routines
+  DROP TABLE IF EXISTS activity
+  DROP TABLE IF EXISTS users
+  `)
+
 
 }
 
@@ -19,27 +26,28 @@ async function createTables() {
     active BOOLEAN DEFAULT true
   )
 
-  CREATE TABLE activity (
+  CREATE TABLE activities (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    description VARCHAR(255) NOT NULL,
-    duration INT NOT NULL,
-    count INT NOT NULL,
-    routineActivityId INT,
-    routineId
+    description VARCHAR(255) NOT NULL
   )
 
 
-  CREATE TABLE routine(
+  CREATE TABLE routines(
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL);
-    
-    CREATE TABLE routine_activity(
-    "activityId" INTEGER REFERENCES activity(id),
-    "routineId" INTEGER REFERENCES routine(id), 
-     UNIQUE ("postId", "tagId") 
+    name VARCHAR(255) UNIQUE NOT NULL
+    goal VARCHAR(255) UNIQUE NOT NULL
+    isPublic BOOLEAN NOT NULL
     );
-`)
+    
+    CREATE TABLE routine_activities (
+    "activityId" INTEGER REFERENCES activities(id),
+    "routineId" INTEGER REFERENCES routines(id), 
+    duration INT NOT NULL,
+    count INT NOT NULL,
+     UNIQUE ("postId", "tagId") 
+      );
+  `)
 
 }
 
