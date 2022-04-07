@@ -144,7 +144,7 @@ describe('Database', () => {
         }));
         expect(routine.isPublic).toBe(true);
       })
-      it('includes username, from users join, aliased as creatorName', async () => {
+     xit('includes username, from users join, aliased as creatorName', async () => {
         expect(routine).toEqual(expect.objectContaining({
           creatorName: expect.any(String),
         }));
