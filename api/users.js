@@ -1,6 +1,6 @@
 // -------------- READ ME ----------------------------------------
 /*
-Currently Contains: Use, GET, register, login
+Currently Contains: Use, get all, register, login
 
 */
 //----------------------------------------------------------------

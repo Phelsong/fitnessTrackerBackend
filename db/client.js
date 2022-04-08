@@ -134,13 +134,56 @@ async function addActivityToRoutine({routineId, activityId, count, duration}) {
   }
 }
 //----------------------------------------------------------------
+async function getUserByUsername(username) {
+  try {
+    const { rows: [user] } = await client.query(`
+      SELECT *
+      FROM users
+      WHERE username=$1;
+    `, [username]);
 
+    return user;
+  } catch (error) {
+    throw error;
+  }
+}
+//----------------------------------------------------------------
+async function getUserById(userId) {
 
+  try {
+    const { rows : [user] } = await client.query(`
+    SELECT username, name, 
+    FROM users
+    WHERE id=${ userId };
+    `)
+    if (!user) {
+      return null
+    }
 
+    user.routines = await getRoutinesByUser(userId)
+  
+    return user
 
+  } catch (error) { return null;}}
+//----------------------------------------------------------------
+async function getRoutinesByUser(userId) {
+  try {
+    const { rows : routineIds } = await client.query(`
+      SELECT id
+      FROM routines
+      WHERE "creatorId"=${ userId };
+    `);
 
+    const uRoutines = await Promise.all(routineIds.map(
+      r => getRoutineById( r.id )
+    ));
 
-
+    return uRoutines;
+  } catch (error) {
+    throw error;
+  }
+ }
+//----------------------------------------------------------------
 async function getActivitiesById(activitiesId) {
   try {
     const { rows: [ activities ]  } = await client.query(`
@@ -200,4 +243,4 @@ async function getActivitiesbyRoutine(tagName) {
 
 
 //----------------------------------------------------------------
-module.exports = {client, getAllUsers, getAllActivities, getAllRoutines, createUser, createActivity, createRoutine, addActivityToRoutine, getActivitiesById, getActivitiesbyRoutine, getRoutinesWithoutActivities}
+module.exports = {client, getAllUsers, getAllActivities, getAllRoutines, createUser, createActivity, createRoutine, addActivityToRoutine, getActivitiesById, getActivitiesbyRoutine, getRoutinesWithoutActivities,getUserByUsername, getUserById, getRoutinesByUser, getRoutineById}

@@ -1,6 +1,6 @@
 // -------------- READ ME ----------------------------------------
 /*
-Currently Contains: 
+Currently Contains: get all, post NEW,
 
 */
 //----------------------------------------------------------------
@@ -16,7 +16,7 @@ activitiesRouter.get("/", async (req, res) => {
     });
   });
 //----------------------------------------------------------------
-activitiesRouter.post('/createactivity', async (req, res, next) => { // ***** QUESTION ON KEEPING ID AND USERNAME IN TOKEN*/
+activitiesRouter.post('/activities/create', async (req, res, next) => { // ***** QUESTION ON KEEPING ID AND USERNAME IN TOKEN*/
  const newActivityData = await createActivity()
  console.log(newActivityData)
  res.send({

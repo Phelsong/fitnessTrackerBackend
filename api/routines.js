@@ -1,12 +1,12 @@
 // -------------- READ ME ----------------------------------------
 /*
-Currently Contains: 
+Currently Contains: get all, post NEW
 
 */
 //----------------------------------------------------------------
 
 const express = require("express");
-const { getAllRoutines } = require("../db");
+const { getAllRoutines, createRoutine } = require("../db");
 const routinesRouter = express.Router();
 
 //----------------------------------------------------------------
@@ -18,7 +18,7 @@ routinesRouter.get("/", async (req, res) => {
     });
   });
 //----------------------------------------------------------------
-routinesRouter.post('/createroutine', async (req, res, next) => { // ***** QUESTION ON KEEPING ID AND USERNAME IN TOKEN*/
+routinesRouter.post('/routines/create', async (req, res, next) => { // ***** QUESTION ON KEEPING ID AND USERNAME IN TOKEN*/
     const newRoutineData = await createRoutine()
     console.log(newRoutineData)
     res.send({
