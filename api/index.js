@@ -13,7 +13,7 @@ const routinesRouter = require("./routines");
 const routine_activitiesRouter = require("./routine_activities");
 const {
     createUser, createActivity, createRoutine, getAllActivities, getAllRoutines, addActivityToRoutine, getRoutinesWithoutActivities, getActivitiesById, getActivitiesbyRoutine
-  } = require('./client');
+  } = require('../db/index.js');
 
 //----------------------------------------------------------------
 const jwt = require('jsonwebtoken');

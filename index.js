@@ -5,17 +5,15 @@ const server = express();
 const apiRouter = require("./api");
 const morgan = require('morgan');
 require('dotenv').config()
-const {PORT = 3000}=process.env;
-
+const {PORT = 3000} = process.env;
+const { client } = require('./db/index');
+//------------------------------------------------------------
+client.connect();
 server.use(cors())
-
 server.use(morgan("dev"));
-
 server.use(express.json());
-
-
 server.use("/api", apiRouter);
-
+//------------------------------------------------------------------
 server.use((req, res, next) => {
   console.log("Start up");
   console.log(req.body);
@@ -23,8 +21,6 @@ server.use((req, res, next) => {
 
   next();
 });
-
-server.use("/api", apiRouter);
 
 server.get('/health', (req, res, next) => {
   res.send(`
