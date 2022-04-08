@@ -17,7 +17,24 @@ routine_activitiesRouter.get("/", async (req, res) => {
       routine_activities
     });
   });
+//----------------------------------------------------------------
 
+    // × Updates the count or duration on the routine activity (6 ms)
+    //× Logged in user should be the owner of the modified object. (6 ms)
+routine_activitiesRouter.patch('/:RoutineActivityId', async (req, res, next) => { 
+    const newRoutineData = await getRoutinesByUser();
+    console.log(newRoutineData)
+
+})
+//----------------------------------------------------------------
+
+    //× Removes an activity from a routine, uses hard delete (10 ms)
+    //× Logged in user should be the owner of the modified object. (6 ms)
+routine_activitiesRouter.delete('/:RoutineActivityId', async (req, res, next) => { 
+    const deletedRoutineData = getRoutinesByUser();
+    console.log(deletedRoutineData)
+
+})
 
 
 

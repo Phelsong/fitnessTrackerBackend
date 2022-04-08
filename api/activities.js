@@ -5,7 +5,7 @@ Currently Contains: get all, post NEW,
 */
 //----------------------------------------------------------------
 const express = require("express");
-const { getAllActivities, createActivity } = require("../db");
+const { getAllActivities, createActivity, getActivityById } = require("../db");
 const activitiesRouter = express.Router();
 //----------------------------------------------------------------
 activitiesRouter.get("/", async (req, res) => {
@@ -16,7 +16,7 @@ activitiesRouter.get("/", async (req, res) => {
     });
   });
 //----------------------------------------------------------------
-activitiesRouter.post('/activities/create', async (req, res, next) => { // ***** QUESTION ON KEEPING ID AND USERNAME IN TOKEN*/
+activitiesRouter.post('/', async (req, res, next) => { 
  const newActivityData = await createActivity()
  console.log(newActivityData)
  res.send({
@@ -24,6 +24,24 @@ activitiesRouter.post('/activities/create', async (req, res, next) => { // *****
   });
 })
 //-----------------------------------------------------------------
+
+    // × Anyone can update an activity (yes, this could lead to long term problems a la wikipedia)
+activitiesRouter.patch('/:activityId', async (req, res, next) => { 
+    const patchedActivityData = await getActivityById()
+    console.log(patchedActivityData)
+
+})
+//-----------------------------------------------------------------
+
+    // × Get a list of all public routines which feature that activity
+activitiesRouter.get("/:activityId/routines", async (req, res) => {
+    const activities = await getAllActivities();
+    console.log(activities);
+    res.send({
+      activities
+    });
+  });
+
 
 
 

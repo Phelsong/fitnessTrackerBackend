@@ -22,7 +22,7 @@ server.use((req, res, next) => {
   next();
 });
 
-server.get('/health', (req, res, next) => {
+server.get('/', (req, res, next) => {
   res.send(`
     <body style="background: ${ req.params.color };">
       <h1> All is Well </h1>
@@ -30,7 +30,7 @@ server.get('/health', (req, res, next) => {
   `);
 });
 
-server.get('/health/:id', function (req, res, next) {
+server.get('/health', function (req, res, next) {
   res.json({msg: 'All is Well'})
 })
 

@@ -10,9 +10,10 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config()
 //----------------------------------------------------------------
 const {
-  createInitialUsers,
+  createUser,
   getAllUsers,
-  getUserByUsername
+  getUser,
+  getRoutinesByUser
 } = require("../db"); //assuming what we will be needing from users section of db
 //----------------------------------------------------------------
 usersRouter.use((req, res, next) => {
@@ -30,6 +31,13 @@ usersRouter.get("/", async (req, res) => {
   });
 });
 //----------------------------------------------------------------
+
+    // × Creates a new user. (6 ms)
+    // √ Requires username and password. Requires all passwords to be at least 8 characters long.
+    // × EXTRA CREDIT: Hashes password before saving user to DB. (1 ms)
+    // × Throws errors for duplicate username (8 ms)
+    // × Throws errors for password-too-short. (1 ms)
+
 usersRouter.post('/register', async (req, res, next) => { //***QUESTION ON PASSWORD REQUIREMENTS */
   const {
     username,
@@ -37,7 +45,7 @@ usersRouter.post('/register', async (req, res, next) => { //***QUESTION ON PASSW
   } = req.body;
 
   try {
-    const _user = await getUserByUsername(username);
+    const _user = await getUser(username);
 
     if (_user) {
       next({
@@ -63,6 +71,10 @@ usersRouter.post('/register', async (req, res, next) => { //***QUESTION ON PASSW
 });
 
 //----------------------------------------------------------------
+
+    //    × Logs in the user. Requires username and password, and verifies that hashed login password matches the saved hashed password. (9 ms)
+    //    × Returns a JSON Web Token. Stores the id and username in the token. (1 ms)
+
 usersRouter.post('/login', async (req, res, next) => { // ***** QUESTION ON KEEPING ID AND USERNAME IN TOKEN*/
   const {
     username,
@@ -103,6 +115,27 @@ usersRouter.post('/login', async (req, res, next) => { // ***** QUESTION ON KEEP
 });
 //----------------------------------------------------------------
 
+    //   × sends back users data if valid token is supplied in header (9 ms)
+    //   √ rejects requests with no valid token (8 ms)
+usersRouter.get("/me", async (req, res) => {
+  const myUser = await getUserByUsername();
+  console.log(myUser);
+  res.send({
+    myUser
+  });
+});
+
+
+//----------------------------------------------------------------
+
+    //  × Gets a list of public routines for a particular user. (1 ms)
+usersRouter.get("/:username/routines", async (req, res) => {
+  const userRoutines = await getRoutinesByUser();
+  console.log(userRoutines);
+  res.send({
+    userRoutines
+  });
+});
 
 
 

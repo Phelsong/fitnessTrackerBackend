@@ -9,37 +9,34 @@ const LOGIN = process.env.DB_login;
 //----------------------------------------------------------------
 const client = new Client({connectionString: process.env.DATABASE_URL || `postgres://${LOGIN}@localhost:5432/fitness-dev`,
 ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined});
-
-
- 
 //----------------------------------------------------------------
 // GETALL functions start:
 async function getAllUsers(){
-    const { rows } = await client.query(
-      `SELECT id, username, name
+    const { rows : allUsers } = await client.query(`
+      SELECT id, username, name
       FROM users;
-    `
-    );
+    `);
   
-    return rows;
+    return allUsers;
 }
 //----------------------------------------------------------------
 async function getAllActivities(){
-  const { rows } = await client.query(
-    `SELECT name, id
+  const {rows : allActivities} = await client.query(`
+    SELECT name, id
     FROM activities;
   `);
-  return rows;
+  return allActivities;
 }
 
 //----------------------------------------------------------------
 async function getAllRoutines(){
-  const { rows } = await client.query(
-    `SELECT name
-    FROM routines;
+  const { rows : allRoutines} = await client.query(`
+    SELECT name
+    FROM routines
+    RETURNING *;
   `);
 
-  return rows;
+  return allRoutines;
 }
 //----------------------------------------------------------------
 async function getRoutinesWithoutActivities(){
@@ -59,17 +56,17 @@ async function getRoutinesWithoutActivities(){
 //----------------------------------------------------------------
 //CREATE functions start:
 async function createUser({ username, password }) {
+  if (password.length < 8){
+    return error
+  }
+
   try {
-    const { rows } = await client.query(
-      `
+    const { rows } = await client.query(`
       INSERT INTO users(username, password) 
       VALUES($1, $2) 
       ON CONFLICT (username) DO NOTHING 
       RETURNING *;
-    `,
-      [username, password]
-    );
-
+    `, [username, password] );
     return rows;
   } catch (error) {
     throw error;
@@ -79,13 +76,13 @@ async function createUser({ username, password }) {
 async function createActivity({name, description}) {
   
   try {
-    const { rows : activities } = await client.query(`
+    const activity = await client.query(`
       INSERT INTO activities ( name, description )
       VALUES($1, $2) 
-      RETURNING *;  
+      RETURNING *;
     `, [name, description] );
-
-     return activities
+    console.log(activity,` ********************************************************`)
+     return activity
 
   } catch (error) {
     console.error("error creating activity")
@@ -101,7 +98,7 @@ async function createRoutine({creatorId, isPublic, name, goal}) {
 // goal: 'To beef up the Chest and Triceps!'
 
   try {
-    const { rows : [routine] } = await client.query(
+    const { rows : routine } = await client.query(
       `
       INSERT INTO routines ("creatorId", "isPublic", name,
         goal) 
@@ -134,9 +131,9 @@ async function addActivityToRoutine({routineId, activityId, count, duration}) {
   }
 }
 //----------------------------------------------------------------
-async function getUserByUsername(username) {
+async function getUser(username) {
   try {
-    const { rows: [user] } = await client.query(`
+    const { rows: user } = await client.query(`
       SELECT *
       FROM users
       WHERE username=$1;
@@ -151,8 +148,8 @@ async function getUserByUsername(username) {
 async function getUserById(userId) {
 
   try {
-    const { rows : [user] } = await client.query(`
-    SELECT username, name, 
+    const { rows : user } = await client.query(`
+    SELECT username, name,
     FROM users
     WHERE id=${ userId };
     `)
@@ -160,13 +157,13 @@ async function getUserById(userId) {
       return null
     }
 
-    user.routines = await getRoutinesByUser(userId)
+    // user.routines = await getRoutinesByUser(userId)
   
     return user
 
   } catch (error) { return null;}}
 //----------------------------------------------------------------
-async function getRoutinesByUser(userId) {
+async function getAllRoutinesByUser(userId) {
   try {
     const { rows : routineIds } = await client.query(`
       SELECT id
@@ -184,11 +181,11 @@ async function getRoutinesByUser(userId) {
   }
  }
 //----------------------------------------------------------------
-async function getActivitiesById(activitiesId) {
+async function getActivityById(activitiesId) {
   try {
     const { rows: [ activities ]  } = await client.query(`
       SELECT *
-      FROM activitiess
+      FROM activities
       WHERE id=$1;
     `, [activitiesId]);
 
@@ -240,7 +237,47 @@ async function getActivitiesbyRoutine(tagName) {
     throw error;
   }
 } 
+//----------------------------------------------------------------
+async function getRoutineById(routineId) {
+  try {
+    const { rows: [ routine ]  } = await client.query(`
+      SELECT *
+      FROM routines
+      WHERE id=$1;
+    `, [routineId]);
+    if (!routine) {
+      throw {
+        name: "RoutineNotFoundError",
+        message: "Routine with that ID does not exist"
+      };
+    }
+
+    const { rows: routineActivities } = await client.query(`
+      SELECT *
+      FROM routine_activities
+      JOIN routine_activities ON activities.id=routine_activities."routineId"
+      WHERE routine_activities."routineId"=$1;
+    `, [routineId])
+
+    // const { rows: [creator] } = await client.query(`
+    //   SELECT id, username, name, location
+    //   FROM users
+    //   WHERE id=$1;
+    // `, [routine.creatorId])
+
+    // routine.creatorId = creator;
+
+
+    return routine;
+  } catch (error) {
+    throw error;
+  }
+}
+
+
+
+
 
 
 //----------------------------------------------------------------
-module.exports = {client, getAllUsers, getAllActivities, getAllRoutines, createUser, createActivity, createRoutine, addActivityToRoutine, getActivitiesById, getActivitiesbyRoutine, getRoutinesWithoutActivities,getUserByUsername, getUserById, getRoutinesByUser, getRoutineById}
+module.exports = {client, getAllUsers, getAllActivities, getAllRoutines, createUser, createActivity, createRoutine, addActivityToRoutine, getActivityById, getActivitiesbyRoutine, getRoutinesWithoutActivities,getUser, getUserById, getAllRoutinesByUser, getRoutineById}
