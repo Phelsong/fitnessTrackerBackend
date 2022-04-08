@@ -1,6 +1,6 @@
 // -------------- READ ME ----------------------------------------
 /*
-Currently Contains: Use, register, login
+Currently Contains: Use, GET, register, login
 
 */
 //----------------------------------------------------------------
@@ -20,6 +20,7 @@ usersRouter.use((req, res, next) => {
 
   next();
 });
+//---------------------------------------------------------------
 usersRouter.get("/", async (req, res) => {
   const users = await getAllUsers();
   console.log("I AM RUNNING");
@@ -28,7 +29,6 @@ usersRouter.get("/", async (req, res) => {
     users
   });
 });
-
 //----------------------------------------------------------------
 usersRouter.post('/register', async (req, res, next) => { //***QUESTION ON PASSWORD REQUIREMENTS */
   const {
