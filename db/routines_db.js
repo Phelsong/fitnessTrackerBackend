@@ -126,7 +126,6 @@ module.exports = {
     getAllRoutines,
     createRoutine,
     getRoutinesWithoutActivities,
-    getActivityById,
     getAllRoutinesByUser,
     getRoutineById
 }

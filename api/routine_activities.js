@@ -6,12 +6,12 @@ Currently Contains:
 //----------------------------------------------------------------
 
 const express = require("express");
-const { getRoutinesByUser } = require("../db");
+const { getAllRoutinesByUser } = require("../db");
 const routine_activitiesRouter = express.Router();
 
 //----------------------------------------------------------------
 routine_activitiesRouter.get("/", async (req, res) => {
-    const routine_activities = await getRoutinesByUser();
+    const routine_activities = await getAllRoutinesByUser();
     console.log(routine_activities);
     res.send({
       routine_activities
@@ -22,7 +22,7 @@ routine_activitiesRouter.get("/", async (req, res) => {
     // × Updates the count or duration on the routine activity (6 ms)
     //× Logged in user should be the owner of the modified object. (6 ms)
 routine_activitiesRouter.patch('/:RoutineActivityId', async (req, res, next) => { 
-    const newRoutineData = await getRoutinesByUser();
+    const newRoutineData = await getAllRoutinesByUser();
     console.log(newRoutineData)
 
 })
@@ -31,7 +31,7 @@ routine_activitiesRouter.patch('/:RoutineActivityId', async (req, res, next) => 
     //× Removes an activity from a routine, uses hard delete (10 ms)
     //× Logged in user should be the owner of the modified object. (6 ms)
 routine_activitiesRouter.delete('/:RoutineActivityId', async (req, res, next) => { 
-    const deletedRoutineData = getRoutinesByUser();
+    const deletedRoutineData = getAllRoutinesByUser();
     console.log(deletedRoutineData)
 
 })

@@ -2,7 +2,7 @@ const {
   client
 } = require('./client');
 require("dotenv").config();
-const LOGIN = process.env.DB_login;
+
 //----------------------------------------------------------------
 async function createUser({
   username,

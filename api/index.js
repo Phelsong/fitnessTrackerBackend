@@ -11,10 +11,6 @@ const usersRouter = require("./users");
 const activitiesRouter = require("./activities");
 const routinesRouter = require("./routines");
 const routine_activitiesRouter = require("./routine_activities");
-const {
-     createUser, createActivity, createRoutine, getAllUsers, getAllActivities, getAllRoutines, addActivityToRoutine, getRoutinesWithoutActivities, getActivitiesById, getActivitiesbyRoutine, 
-  } = require('../db/index.js');
-
 //----------------------------------------------------------------
 const jwt = require('jsonwebtoken');
 const {JWT_SECRET } = process.env
