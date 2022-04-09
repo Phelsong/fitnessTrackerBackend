@@ -13,7 +13,7 @@ const {
   createUser,
   getAllUsers,
   getUser,
-  getRoutinesByUser
+  getAllRoutinesByUser
 } = require("../db"); //assuming what we will be needing from users section of db
 //----------------------------------------------------------------
 usersRouter.use((req, res, next) => {
@@ -46,7 +46,6 @@ usersRouter.post('/register', async (req, res, next) => { //***QUESTION ON PASSW
 
   try {
     const _user = await getUser(username);
-
     if (_user) {
       next({
         name: 'UserExistsError',
@@ -57,15 +56,25 @@ usersRouter.post('/register', async (req, res, next) => { //***QUESTION ON PASSW
       username,
       password,
     });
+
+    const token = jwt.sign({ 
+      id: user.id, 
+      username
+    }, process.env.JWT_SECRET, {
+      expiresIn: '1w'
+    });
+
     res.send({
+      id : user.id,
+      username: user.username,
       message: "thank you for signing up",
       token
     });
   } catch ({
-    message
+    username, message
   }) {
     next({
-      message
+      username, message
     })
   }
 });
@@ -118,10 +127,10 @@ usersRouter.post('/login', async (req, res, next) => { // ***** QUESTION ON KEEP
     //   × sends back users data if valid token is supplied in header (9 ms)
     //   √ rejects requests with no valid token (8 ms)
 usersRouter.get("/me", async (req, res) => {
-  const myUser = await getUserByUsername();
-  console.log(myUser);
+  const {username : user} = req.body;
+  const {id, username}= await getUser(user);
   res.send({
-    myUser
+    id, username
   });
 });
 
@@ -130,7 +139,7 @@ usersRouter.get("/me", async (req, res) => {
 
     //  × Gets a list of public routines for a particular user. (1 ms)
 usersRouter.get("/:username/routines", async (req, res) => {
-  const userRoutines = await getRoutinesByUser();
+  const userRoutines = await getAllRoutinesByUser();
   console.log(userRoutines);
   res.send({
     userRoutines
