@@ -44,6 +44,54 @@ async function createRoutine({
         throw error;
     }
 }
+//----------------------------------------------------------------
+async function updateRoutine({
+    id,
+    isPublic,
+    name,
+    goal
+}) {
+    try {
+        const {
+            rows: [routine],
+        } = await client.query(
+            `
+        UPDATE routines
+        SET "isPublic"=COALESCE($2, routines."isPublic"),
+        name=COALESCE($3, name),
+        goal=COALESCE($4, goal)
+        WHERE routines.id=$1
+        RETURNING *;
+        `,
+            [id, isPublic, name, goal]
+        );
+        return routine;
+    } catch (error) {
+        console.error("error updating routine")
+        throw error;
+    }
+}
+//----------------------------------------------------------------
+async function destroyRoutine(id) {
+    try {
+        await client.query(`
+          DELETE
+          FROM routines
+          WHERE id=$1;
+          `,[id]);
+        await client.query(`
+          DELETE 
+          FROM routine_activities
+          WHERE routine_activities."routineId"=$1;
+          `,[id]);
+
+    } catch (error) {
+        console.error("error deleting routine")
+        throw error;
+    }
+}
+
+
 
 //----------------------------------------------------------------
 async function getRoutinesWithoutActivities() {
@@ -52,8 +100,6 @@ async function getRoutinesWithoutActivities() {
             rows
         } = await client.query(`
     SELECT * FROM routines
-    LEFT JOIN routine_activities ON routines.id=routine_activities."routineId"
-    WHERE "routineId" is NULL;
     `)
         return rows
     } catch (e) {
@@ -63,18 +109,32 @@ async function getRoutinesWithoutActivities() {
 }
 //----------------------------------------------------------------
 async function getAllRoutinesByUser(userId) {
+    // id (number): This is the database identifier for the routine object.
+    // creatorId (number): This is the database identifier for the user which created this routine
+    // creatorName (string): This is the username for the user which created this routine
+    // isPublic (boolean): Whether or not the routine should be visible to all users (will always be true for public routes)
+    // name (string): This is the name (or title) of the routine.
+    // goal (string): This is like the description of the routine.
+    // activity (array of activity objects): An array of activities associated with this routine.
+    // id (number): This is the database identifier for the activity
+    // name (string): This is the name (or title) of the activity.
+    // description (string): This is the description of the activity.
+    // duration (number): This is how long (in minutes) this activity should be performed for this routine.
+    // count (number): This is the number of times (reps) this activity should be performed for this routine.
+    // routineActivityId (number): This is the database identifier for the routine_activity
+    // routineId (number): This is the database identifier for the routine
+
     try {
         const {
-            rows: routineIds
+            rows: [uRoutines]
         } = await client.query(`
-        SELECT id
+        SELECT routines.*, users.username AS "creatorName"
         FROM routines
-        WHERE "creatorId"=${ userId };
-      `);
+        JOIN users ON routines."creatorId" = users.id
+        WHERE username = $1  
+      `, userId);
 
-        const uRoutines = await Promise.all(routineIds.map(
-            r => getRoutineById(r.id)
-        ));
+
 
         return uRoutines;
     } catch (error) {
@@ -119,13 +179,54 @@ async function getRoutineById(routineId) {
         throw error;
     }
 }
+//----------------------------------------------------------------
 
+async function getAllPublicRoutines() {
+    try {
+        const {
+            rows: [routines]
+        } = await client.query(
+            `
+        SELECT routines.*, users.username AS "creatorName"
+        FROM routines
+        JOIN users ON routines."creatorId" = users.id
+        WHERE "isPublic" = $1
+        `,
+            [true]
+        );
+
+        return routines
+    } catch (error) {
+        throw error;
+    }
+}
+//----------------------------------------------------------------
+async function getPublicRoutinesByUser() {
+    try {
+       
+    } catch (error) {
+        throw error;
+    }
+}
+//----------------------------------------------------------------
+async function getPublicRoutinesByActivity() {
+    try {
+        
+    } catch (error) {
+        throw error;
+    }
+}
 
 //----------------------------------------------------------------
 module.exports = {
     getAllRoutines,
     createRoutine,
+    updateRoutine,
+    destroyRoutine,
     getRoutinesWithoutActivities,
     getAllRoutinesByUser,
-    getRoutineById
+    getRoutineById,
+    getAllPublicRoutines,
+    getPublicRoutinesByUser,
+    getPublicRoutinesByActivity
 }

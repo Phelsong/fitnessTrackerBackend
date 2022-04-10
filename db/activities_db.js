@@ -6,7 +6,7 @@ async function getAllActivities() {
     const {
         rows: allActivities
     } = await client.query(`
-      SELECT name, id
+      SELECT *
       FROM activities;
     `);
     return allActivities;
@@ -18,12 +18,14 @@ async function createActivity({
 }) {
 
     try {
-        const { rows: [newActivity]} = await client.query(`
+        const {
+            rows: [newActivity]
+        } = await client.query(`
 
         INSERT INTO activities ( name, description )
         VALUES($1, $2) 
         RETURNING *;
-        
+
       `, [name, description]);
 
         return newActivity
@@ -33,45 +35,45 @@ async function createActivity({
         throw error;
     }
 }
-//-----------------------------------------------------------------
-async function addActivityToRoutine({
-    routineId,
-    activityId,
-    count,
-    duration
-}) {
-
-    try {
-        const {
-            rows: [routineActivities]
-        } = await client.query(`
-        INSERT INTO routine_activities ("routineId", "activityId", count, duration)
-        VALUES($1, $2, $3, $4)
-        RETURNING *; 
-      `, [routineId, activityId, count, duration]);
-        return routineActivities
-
-    } catch (error) {
-        console.error("error creating routine_activities: " + error)
-        throw error;
-    }
-}
 //----------------------------------------------------------------
-async function getActivityById(activityId) {
+async function updateActivity({
+    id,
+    name,
+    description
+}) {
     try {
         const {
             rows: [activity],
         } = await client.query(
             `
+            UPDATE activities
+            SET name=$2,
+            description=$3
+            WHERE id=$1
+            RETURNING *;`, [id, name, description])
+
+        return activity
+
+    } catch (error) {
+        console.error("error updating Activity")
+        throw error;
+    }
+}
+
+//----------------------------------------------------------------
+async function getActivityById(activityId) {
+    try {
+        const {
+            rows: [activity]
+        } = await client.query(`
           SELECT *
           FROM activities
           WHERE id=$1 
-        `,
-            [activityId]
-        );
+        `, [activityId]);
 
         return activity;
     } catch (error) {
+        console.error("error getting Activity")
         throw error;
     }
 }
@@ -92,7 +94,6 @@ async function getActivityByIdiiiiiiiii(activitiesId) {
                 message: "Could not find a activities with that activitiesId"
             };
         }
-
         const {
             rows: routines
         } = await client.query(`
@@ -145,6 +146,6 @@ module.exports = {
     createActivity,
     getAllActivities,
     getActivitiesbyRoutine,
-    addActivityToRoutine,
-    getActivityById
+    getActivityById,
+    updateActivity
 }

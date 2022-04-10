@@ -1,9 +1,7 @@
-// require in the database adapter functions as you write them (createUser, createActivity...)
-// const { } = require('./');
 const {
-  client, createUser, createActivity, createRoutine, getAllActivities, getAllRoutines, addActivityToRoutine, getRoutinesWithoutActivities
+  client, createUser, createActivity, createRoutine, getAllActivities, addActivityToRoutine, getRoutinesWithoutActivities
 } = require('./index');
-
+//----------------------------------------------------------------
 async function dropTables() {
   // console.log('Dropping All Tables...');
   // drop all tables, in the correct order
@@ -18,10 +16,8 @@ async function dropTables() {
     console.error("Error dropping tables!");
     throw error;
   }
-
-
 }
-
+//----------------------------------------------------------------
 async function createTables() {
 
   try {
@@ -49,6 +45,7 @@ async function createTables() {
     );
     
   CREATE TABLE routine_activities(
+    id SERIAL PRIMARY KEY,
     "activityId" INTEGER REFERENCES activities(id),
     "routineId" INTEGER REFERENCES routines(id), 
     duration INTEGER NOT NULL,
@@ -62,7 +59,7 @@ async function createTables() {
   }
   // console.log("Tables created")
 }
-
+//----------------------------------------------------------------
 
 
 
@@ -70,7 +67,7 @@ async function createTables() {
 
 /* 
 
-DO NOT CHANGE ANYTHING BELOW. This is default seed data, and will help you start testing, before getting to the tests. 
+DO NOT CHANGE ANYTHING BELOW. This is default seed data.
 
 */
 
@@ -101,6 +98,7 @@ async function createInitialUsers() {
     throw error;
   }
 }
+//----------------------------------------------------------------
 async function createInitialActivities() {
   try {
     console.log('Starting to create activities...');
@@ -146,7 +144,7 @@ async function createInitialActivities() {
   }
 }
 
-
+//----------------------------------------------------------------
 async function createInitialRoutines() {
   try {
     console.log('starting to create routines...');
@@ -183,7 +181,7 @@ async function createInitialRoutines() {
     throw error;
   }
 }
-
+//----------------------------------------------------------------
 async function createInitialRoutineActivities() {
   try {
     // console.log('starting to create routine_activities...');
@@ -253,7 +251,7 @@ async function createInitialRoutineActivities() {
     throw error;
   }
 }
-
+//----------------------------------------------------------------
 async function rebuildDB() {
   try {
     client.connect();

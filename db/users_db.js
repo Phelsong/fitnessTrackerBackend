@@ -38,18 +38,19 @@ async function getAllUsers() {
   return allUsers;
 }
 //----------------------------------------------------------------
-async function getUser(username) {
+async function getUser({username, password}) {
   try {
     const {
-      rows: [user]
+      rows: [me]
     } = await client.query(`
       SELECT id, username
       FROM users
-      WHERE username=$1;
-    `, [username]);
+      WHERE username=$1 AND password =$2;
+    `, [username, password]);
 
-    return user;
+    return me;
   } catch (error) {
+    console.error('error getting ME')
     throw error;
   }
 }
@@ -62,18 +63,19 @@ async function getUserById(userId) {
     } = await client.query(`
     SELECT username
     FROM users
-    WHERE id=${ userId };
-    `)
-    if (!user) {
-      return null
-    }
+    WHERE id=$1;
+    `, [userId]);
+    // if (!user) {
+    //   return null
+    // }
 
     // user.routines = await getRoutinesByUser(userId)
 
     return user
 
   } catch (error) {
-    return null;
+    console.error('error getting User')
+    return error;
   }
 }
 
