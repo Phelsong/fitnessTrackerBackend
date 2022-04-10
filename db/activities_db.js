@@ -78,50 +78,7 @@ async function getActivityById(activityId) {
     }
 }
 //----------------------------------------------------------------
-async function getActivityByIdiiiiiiiii(activitiesId) {
-    try {
-        const {
-            rows: [activities]
-        } = await client.query(`
-        SELECT *
-        FROM activities
-        WHERE id=$1;
-      `, [activitiesId]);
 
-        if (!activities) {
-            throw {
-                name: "activitiesNotFoundError",
-                message: "Could not find a activities with that activitiesId"
-            };
-        }
-        const {
-            rows: routines
-        } = await client.query(`
-        SELECT routines.*
-        FROM routines
-        JOIN routine_activities ON routines.id=routine_activities."routineId"
-        WHERE routine_activities."activityId"=$1;
-      `, [activitiesId])
-
-        const {
-            rows: [author]
-        } = await client.query(`
-        SELECT id, username, name, location
-        FROM users
-        WHERE id=$1;
-      `, [activities.authorId])
-
-        activities.routines = routines;
-        activities.author = author;
-
-        delete activities.authorId;
-
-        return activities;
-    } catch (error) {
-        throw error;
-    }
-}
-//----------------------------------------------------------------
 async function getActivitiesbyRoutine(tagName) {
     try {
         const {

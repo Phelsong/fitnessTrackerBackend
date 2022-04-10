@@ -7,7 +7,8 @@ const {
   createUser,
   getAllUsers,
   getUser,
-  getUserById
+  getUserById,
+  getUserByUsername
 } = require('./users_db')
 //----------------------------------------------------------------
 const {
@@ -53,6 +54,7 @@ module.exports = {
   getActivitiesbyRoutine,
   getUser,
   getUserById,
+  getUserByUsername,
   getAllRoutinesByUser,
   getRoutineById,
   getAllPublicRoutines,
