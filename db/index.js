@@ -29,13 +29,15 @@ const {
   getAllActivities,
   getActivitiesbyRoutine,
   getActivityById,
-  updateActivity
+  updateActivity,
+  attachActivitiesToRoutines
 } = require('./activities_db')
 //----------------------------------------------------------------
 const {
   addActivityToRoutine,
   updateRoutineActivity,
-  destroyRoutineActivity
+  destroyRoutineActivity,
+  getRoutineActivitiesByRoutine
 } = require('./routine_activities_db')
 //----------------------------------------------------------------
 module.exports = {
@@ -61,5 +63,7 @@ module.exports = {
   updateRoutine,
   updateActivity,
   getPublicRoutinesByUser,
-  getPublicRoutinesByActivity
+  getPublicRoutinesByActivity,
+  getRoutineActivitiesByRoutine,
+  attachActivitiesToRoutines
 };

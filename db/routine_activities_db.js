@@ -35,16 +35,13 @@ async function updateRoutineActivity({
     try {
         const {
             rows: [activity],
-        } = await client.query(
-            `
+        } = await client.query(`
         UPDATE routine_activities
         SET count=COALESCE($2, count),
         duration=COALESCE($3, duration)
         WHERE id=$1
         RETURNING*;
-        `,
-            [id, count, duration]
-        );
+        `, [id, count, duration]);
         return activity;
     } catch (error) {
         console.error('error updating routine_activities:')
@@ -55,16 +52,13 @@ async function updateRoutineActivity({
 async function destroyRoutineActivity(id) {
     try {
         const {
-            rows: [activity],
-        } = await client.query(
-            `
+            rows: [activity]
+        } = await client.query(`
         DELETE
         FROM routine_activities
         WHERE routine_activities.id=$1
-        RETURNING*
-        `,
-            [id]
-        );
+        RETURNING *
+        `, [id]);
         return activity;
     } catch (error) {
         console.error('error deleting routine_activities:')
@@ -72,8 +66,25 @@ async function destroyRoutineActivity(id) {
     }
 }
 //----------------------------------------------------------------
+async function getRoutineActivitiesByRoutine({id}) {
+    try {
+        const {
+            rows
+        } = await client.query(`
+        SELECT *
+        FROM routine_activities
+        WHERE routine_activities."routineId"=$1;
+        `, [id]);
+        return rows;
+    } catch (error) {
+        console.error('error getting routine_activities:')
+        throw error;
+    }
+}
+//----------------------------------------------------------------
 module.exports = {
     addActivityToRoutine,
     updateRoutineActivity,
-    destroyRoutineActivity
+    destroyRoutineActivity,
+    getRoutineActivitiesByRoutine
 }

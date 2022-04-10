@@ -61,13 +61,13 @@ async function getUserById(userId) {
     const {
       rows: [user]
     } = await client.query(`
-    SELECT username
+    SELECT *
     FROM users
     WHERE id=$1;
     `, [userId]);
-    // if (!user) {
-    //   return null
-    // }
+    if (!user) {
+      return null
+    }
 
     // user.routines = await getRoutinesByUser(userId)
 

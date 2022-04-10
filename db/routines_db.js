@@ -1,6 +1,7 @@
 const {
     client
 } = require('./client');
+const {attachActivitiesToRoutines} = require('./index')
 //----------------------------------------------------------------
 async function getAllRoutines(userId) {
     const {
