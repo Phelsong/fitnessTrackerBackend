@@ -1,18 +1,29 @@
 const {
     client
 } = require('./client');
-const {attachActivitiesToRoutines} = require('./index')
+const {
+    attachActivitiesToRoutines
+} = require('./activities_db')
+const {
+    getUser
+} = require('./users_db')
 //----------------------------------------------------------------
-async function getAllRoutines(userId) {
-    const {
-        rows: allRoutines
-    } = await client.query(`
+async function getAllRoutines() {
+    try {
+        const {
+            rows
+        } = await client.query(`
     SELECT routines.*, users.username AS "creatorName"
     FROM routines
     INNER JOIN users ON users.id = routines."creatorId";
     `);
+        const allRoutines = await attachActivitiesToRoutines(rows)
 
-    return allRoutines;
+        return allRoutines;
+    } catch (error) {
+        console.error("error getting all routines", error);
+        throw error;
+    }
 }
 //----------------------------------------------------------------
 async function createRoutine({
@@ -58,7 +69,7 @@ async function updateRoutine({
         } = await client.query(
             `
         UPDATE routines
-        SET "isPublic"=COALESCE($2, routines."isPublic"),
+        SET "isPublic"= COALESCE($2, routines."isPublic"),
         name=COALESCE($3, name),
         goal=COALESCE($4, goal)
         WHERE routines.id=$1
@@ -79,12 +90,12 @@ async function destroyRoutine(id) {
           DELETE
           FROM routines
           WHERE id=$1;
-          `,[id]);
+          `, [id]);
         await client.query(`
           DELETE 
           FROM routine_activities
           WHERE routine_activities."routineId"=$1;
-          `,[id]);
+          `, [id]);
 
     } catch (error) {
         console.error("error deleting routine")
@@ -109,7 +120,7 @@ async function getRoutinesWithoutActivities() {
     }
 }
 //----------------------------------------------------------------
-async function getAllRoutinesByUser(userId) {
+async function getAllRoutinesByUser(username) {
     // id (number): This is the database identifier for the routine object.
     // creatorId (number): This is the database identifier for the user which created this routine
     // creatorName (string): This is the username for the user which created this routine
@@ -127,19 +138,23 @@ async function getAllRoutinesByUser(userId) {
 
     try {
         const {
-            rows: [uRoutines]
+            id
+        } = await getUser(username);
+        const {
+            rows: uRoutines
         } = await client.query(`
-        SELECT routines.*, users.username AS "creatorName"
-        FROM routines
-        JOIN users ON routines."creatorId" = users.id
-        WHERE username = $1  
-      `, userId);
+              SELECT routines.*, users.username AS "creatorName"
+              FROM routines
+              JOIN users ON routines."creatorId" = users.id 
+              WHERE "creatorId" = $1
+              AND "isPublic" = true
+              `, [id]);
+        const result = await attachActivitiesToRoutines(uRoutines)
+        return result
 
-
-
-        return uRoutines;
-    } catch (error) {
-        throw error;
+    } catch (e) {
+        console.error(e, "error getting routines from user")
+        throw e;
     }
 }
 //----------------------------------------------------------------
@@ -183,28 +198,34 @@ async function getRoutineById(routineId) {
 //----------------------------------------------------------------
 
 async function getAllPublicRoutines() {
-    try {
-        const {
-            rows: [routines]
-        } = await client.query(
-            `
-        SELECT routines.*, users.username AS "creatorName"
-        FROM routines
-        JOIN users ON routines."creatorId" = users.id
-        WHERE "isPublic" = $1
-        `,
-            [true]
-        );
 
-        return routines
+    // id (number): This is the database identifier for the routine
+    // name (string): This is the name (or title) of the routine.
+    // goal (string): This is like the description of the routine.
+    // creatorId (number): This is the database identifier for the user which created this routine
+    // isPublic (boolean): Whether or not the routine should be visible to all users. null by default
+    // creatorName (string): This is the username for the user which created this routine
+
+    try{
+    const { rows: routines } = await client.query(`
+    SELECT routines.*, users.username AS "creatorName"
+    FROM routines
+    JOIN users ON routines."creatorId" = users.id
+    WHERE "isPublic" = true
+    `);
+    const result = attachActivitiesToRoutines(routines)
+    return result
+
+    
     } catch (error) {
+        console.error(e, "error getting public routines")
         throw error;
     }
 }
 //----------------------------------------------------------------
 async function getPublicRoutinesByUser() {
     try {
-       
+
     } catch (error) {
         throw error;
     }
@@ -212,7 +233,7 @@ async function getPublicRoutinesByUser() {
 //----------------------------------------------------------------
 async function getPublicRoutinesByActivity() {
     try {
-        
+
     } catch (error) {
         throw error;
     }
