@@ -13,6 +13,7 @@ const {
   createUser,
   getAllUsers,
   getUser,
+  getUserByUsername,
   getAllRoutinesByUser
 } = require("../db"); //assuming what we will be needing from users section of db
 //----------------------------------------------------------------
@@ -43,20 +44,19 @@ usersRouter.post('/register', async (req, res, next) => { //***QUESTION ON PASSW
     username,
     password
   } = req.body;
-
+  if (password.length < 8) { return res.status(401).send("Password is too short")}
   try {
     const _user = await getUser(username);
     if (_user) {
-      next({
-        name: 'UserExistsError',
-        message: 'A user by that username already exists'
-      });
+      res.send(error)
+      next();
     }
+   
     const user = await createUser({
       username,
       password,
     });
-
+  
     const token = jwt.sign({ 
       id: user.id, 
       username
@@ -64,19 +64,13 @@ usersRouter.post('/register', async (req, res, next) => { //***QUESTION ON PASSW
       expiresIn: '1w'
     });
 
-    res.send({
-      id : user.id,
-      username: user.username,
+    res.send({ 
       message: "thank you for signing up",
-      token
+      token 
     });
-  } catch ({
-    username, message
-  }) {
-    next({
-      username, message
-    })
-  }
+  } catch ({ name, message }) {
+    next({ name, message })
+  } 
 });
 
 //----------------------------------------------------------------
@@ -102,10 +96,10 @@ usersRouter.post('/login', async (req, res, next) => { // ***** QUESTION ON KEEP
     const user = await getUserByUsername(username);
     const token = jwt.sign({
       id: user.id,
-      username: user.username
+      username: username
     }, process.env.JWT_SECRET);
     const recoveredData = jwt.verify(token, process.env.JWT_SECRET)
-    if (user && user.password == password) {
+    if (user && (user.password == password)) {
 
       res.send({
         message: "you're logged in!",
@@ -128,10 +122,15 @@ usersRouter.post('/login', async (req, res, next) => { // ***** QUESTION ON KEEP
     //   √ rejects requests with no valid token (8 ms)
 usersRouter.get("/me", async (req, res) => {
   const {username : user} = req.body;
-  const {id, username}= await getUser(user);
+  try {
+  const {id, username} = await getUserByUsername(user);
   res.send({
     id, username
   });
+}catch (error) {res.status(500).send} 
+
+
+
 });
 
 
@@ -139,7 +138,8 @@ usersRouter.get("/me", async (req, res) => {
 
     //  × Gets a list of public routines for a particular user. (1 ms)
 usersRouter.get("/:username/routines", async (req, res) => {
-  const userRoutines = await getAllRoutinesByUser();
+  const {username : user} = req.body;
+  const userRoutines = await getAllRoutinesByUser(user);
   console.log(userRoutines);
   res.send({
     userRoutines
