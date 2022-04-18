@@ -11,26 +11,11 @@ require('dotenv').config()
 //----------------------------------------------------------------
 const {
   createUser,
-  getAllUsers,
-  getUser,
   getUserByUsername,
   getAllRoutinesByUser
 } = require("../db"); //assuming what we will be needing from users section of db
+const {requireUser} = require("./helpers.js")
 //----------------------------------------------------------------
-usersRouter.use((req, res, next) => {
-  console.log("A request is being made to /users");
-
-  next();
-});
-//---------------------------------------------------------------
-usersRouter.get("/", async (req, res) => {
-  const users = await getAllUsers();
-  console.log("I AM RUNNING");
-  console.log(users);
-  res.send({
-    users
-  });
-});
 //----------------------------------------------------------------
 
     // × Creates a new user. (6 ms)
@@ -44,13 +29,11 @@ usersRouter.post('/register', async (req, res, next) => { //***QUESTION ON PASSW
     username,
     password
   } = req.body;
-  if (password.length < 8) { return res.status(401).send("Password is too short")}
+  
   try {
-    const _user = await getUser(username);
-    if (_user) {
-      res.send(error)
-      next();
-    }
+    const _user = await getUserByUsername({username});
+    if (_user) { return res.status(409).send({message:`user with name: ${username} already exists`}) }
+    if (password.length < 8) { return res.status(411).send({message:`Password must be a minimum of 8 characters`})}
    
     const user = await createUser({
       username,
@@ -64,12 +47,14 @@ usersRouter.post('/register', async (req, res, next) => { //***QUESTION ON PASSW
       expiresIn: '1w'
     });
 
-    res.send({ 
-      message: "thank you for signing up",
+    res.status(200).send({ 
+      user,
       token 
     });
+    next()
   } catch ({ name, message }) {
-    next({ name, message })
+    res.status(400).send
+    next()
   } 
 });
 
@@ -85,26 +70,28 @@ usersRouter.post('/login', async (req, res, next) => { // ***** QUESTION ON KEEP
   } = req.body;
 
 
-  if (!username || !password) {
-    next({
-      name: "MissingCredentialsError",
-      message: "Please supply both a username and password"
-    });
-  }
+
 
   try {
-    const user = await getUserByUsername(username);
+    if (!username || !password) {
+      next({
+        name: "MissingCredentialsError",
+        message: "Please supply both a username and password"
+      });
+    }
+    const {rows : [user]} = await getUserByUsername({username});
     const token = jwt.sign({
       id: user.id,
       username: username
     }, process.env.JWT_SECRET);
-    const recoveredData = jwt.verify(token, process.env.JWT_SECRET)
+    // const recoveredData = jwt.verify(token, process.env.JWT_SECRET)
     if (user && (user.password == password)) {
 
-      res.send({
+      res.status(200).send({
         message: "you're logged in!",
         token: token
       });
+      next()
     } else {
       next({
         name: 'IncorrectCredentialsError',
@@ -112,38 +99,29 @@ usersRouter.post('/login', async (req, res, next) => { // ***** QUESTION ON KEEP
       });
     }
   } catch (error) {
-    console.log(error);
-    next(error);
-  }
-});
+    res.status(401).send(error);
+}});
 //----------------------------------------------------------------
 
     //   × sends back users data if valid token is supplied in header (9 ms)
     //   √ rejects requests with no valid token (8 ms)
-usersRouter.get("/me", async (req, res) => {
-  const {username : user} = req.body;
+usersRouter.get("/me", requireUser, async (req, res) => {
   try {
-  const {id, username} = await getUserByUsername(user);
-  res.send({
-    id, username
-  });
-}catch (error) {res.status(500).send} 
-
-
-
+    res.send(req.user);
+}catch (error) {res.status(511).send} 
 });
 
 
 //----------------------------------------------------------------
 
     //  × Gets a list of public routines for a particular user. (1 ms)
-usersRouter.get("/:username/routines", async (req, res) => {
-  const {username : user} = req.body;
+usersRouter.get("/:username/routines",  async (req, res) => {
+  try{
+  const {username : user} = req.params;
   const userRoutines = await getAllRoutinesByUser(user);
-  console.log(userRoutines);
-  res.send({
-    userRoutines
-  });
+  res.status(200).send(userRoutines);
+}
+catch (error) {res.status(500).send(error)}
 });
 
 

@@ -7,8 +7,8 @@ const morgan = require('morgan');
 require('dotenv').config()
 const {PORT = 3000} = process.env;
 const { client } = require('./db/index');
-//------------------------------------------------------------
 client.connect();
+//------------------------------------------------------------
 server.use(cors())
 server.use(morgan("dev"));
 server.use(express.json());
@@ -22,19 +22,18 @@ server.use((req, res, next) => {
   next();
 });
 
-server.get('/', (req, res, next) => {
-  res.send(`
-    <body style="background: ${ req.params.color };">
-      <h1> All is Well </h1>
-    </body>
-  `);
-});
-
-server.get('/health', function (req, res, next) {
-  res.json({msg: 'All is Well'})
-})
+// server.get('/', (req, res, next) => {
+//   res.send(`
+//     <body style="background: ${ req.params.color };">
+//       <h1> All is Well </h1>
+//     </body>
+//   `);
+// });
 
 
+//------------------------------------------------------------
+
+//------------------------------------------------------------
 server.listen(PORT, () => {
   console.log("The server is up on port", PORT);
 });

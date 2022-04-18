@@ -23,7 +23,7 @@ async function createUser({
     `, [username, password]);
     return user;
   } catch (error) {
-    throw error;
+    console.error(error, "error creating user"); 
   }
 }
 //----------------------------------------------------------------
@@ -78,13 +78,11 @@ async function getUserById(userId) {
     const {
       rows: [user]
     } = await client.query(`
-    SELECT *
+    SELECT id, username
     FROM users
     WHERE id=$1;
     `, [userId]);
-    if (!user) {
-      return null
-    }
+ 
 
     // user.routines = await getRoutinesByUser(userId)
 
